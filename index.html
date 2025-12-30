@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>La Mia Biblioteca Cloud</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h1><i class="fas fa-book-open"></i> Biblioteca</h1>
+            <p>Salva i tuoi libri nel cloud e accedivi ovunque.</p>
+            
+            <button class="btn-google" onclick="loginWithGoogle()">
+                <i class="fab fa-google"></i> Accedi con Google
+            </button>
+            
+            <button class="btn-guest" onclick="loginAsGuest()">
+                <i class="fas fa-user-secret"></i> Continua come Ospite
+            </button>
+            
+            <p class="small-info">La modalità ospite salva solo su questo dispositivo.</p>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-content">
+            <div class="user-info">
+                <span id="user-display-name">Ospite</span>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+            <h1>Biblioteca</h1>
+        </div>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Cerca titolo o autore...">
+                <button onclick="searchBooks()"><i class="fas fa-search"></i></button>
+            </div>
+            <div id="search-results" class="results-grid"></div>
+        </section>
+
+        <hr>
+
+        <section class="library-section">
+            <div class="section-header">
+                <h2>La tua collezione</h2>
+                <button class="btn-share" onclick="shareLibrary()" title="Esporta lista"><i class="fas fa-share-alt"></i></button>
+            </div>
+
+            <div class="filters">
+                <button onclick="filterLibrary('all')" class="active">Tutti</button>
+                <button onclick="filterLibrary('owned')"><i class="fas fa-check"></i></button>
+                <button onclick="filterLibrary('read')"><i class="fas fa-book-reader"></i></button>
+            </div>
+            
+            <div id="my-library" class="library-grid">
+                <p class="loading-msg">Caricamento libri...</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
