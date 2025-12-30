@@ -9,11 +9,7 @@ const firebaseConfig = {
     appId: "1:349757686044:web:00f1423d133ae7339afad9"
   };
 
-
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -21,86 +17,128 @@ const db = firebase.firestore();
 let currentUser = null;
 let myBooks = [];
 let isGuest = false;
+let currentDetailId = null; // To track which book is open in modal
+let tempRating = 0; // Temporary rating before saving
 
-// --- LOGIN MANAGEMENT ---
-
+// --- LOGIN ---
 auth.onAuthStateChanged(user => {
-    if (user) {
-        handleUserLogin(user);
-    } else {
-        if (!isGuest) {
-            document.getElementById('login-overlay').style.display = 'flex';
-        }
-    }
+    if (user) handleUserLogin(user);
+    else if (!isGuest) document.getElementById('login-overlay').style.display = 'flex';
 });
 
 function loginWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-        .then((result) => {
-            handleUserLogin(result.user);
-        }).catch((error) => {
-            console.error("Login error:", error);
-            alert("Login error: " + error.message);
-        });
+    auth.signInWithPopup(provider).then((r) => handleUserLogin(r.user)).catch(e => alert(e.message));
 }
-
 function loginAsGuest() {
-    isGuest = true;
-    currentUser = null;
+    isGuest = true; currentUser = null;
     document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('user-display-name').innerText = "Guest Mode (Local)";
+    document.getElementById('user-display-name').innerText = "Guest Mode";
     myBooks = JSON.parse(localStorage.getItem('myLibrary')) || [];
     renderLibrary();
 }
-
 function handleUserLogin(user) {
-    currentUser = user;
-    isGuest = false;
+    currentUser = user; isGuest = false;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('user-display-name').innerText = user.displayName;
     loadFromFirebase();
 }
-
 function logout() {
-    if (isGuest) {
-        location.reload();
-    } else {
-        auth.signOut().then(() => {
-            location.reload();
-        });
-    }
+    (isGuest) ? location.reload() : auth.signOut().then(() => location.reload());
+}
+function scrollToLibrary() {
+    const s = document.getElementById('my-collection');
+    if (s) window.scrollTo({ top: s.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' });
 }
 
-// --- SCROLL FUNCTION (MOBILE OPTIMIZED) ---
-function scrollToLibrary() {
-    const section = document.getElementById('my-collection');
-    if (section) {
-        // Calculate exact position minus header height
-        const y = section.getBoundingClientRect().top + window.scrollY - 100;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-    } else {
-        console.log("Error: 'my-collection' section not found.");
+// --- BOOK DETAIL FUNCTIONS (NEW) ---
+
+function openBookDetails(id) {
+    const book = myBooks.find(b => b.id === id);
+    if (!book) return;
+
+    currentDetailId = id;
+    tempRating = book.rating || 0;
+
+    // Populate Modal Info
+    document.getElementById('detail-img').src = book.image;
+    document.getElementById('detail-title').innerText = book.title;
+    document.getElementById('detail-author').innerText = book.author;
+    document.getElementById('detail-year').innerText = "Published: " + (book.year || "Unknown");
+    document.getElementById('detail-notes').value = book.notes || "";
+
+    // Set Stars
+    updateStarVisuals(tempRating);
+
+    // Show Overlay
+    document.getElementById('detail-overlay').classList.remove('hidden');
+}
+
+function closeBookDetails() {
+    document.getElementById('detail-overlay').classList.add('hidden');
+    currentDetailId = null;
+}
+
+function setRating(n) {
+    tempRating = n;
+    updateStarVisuals(n);
+}
+
+function updateStarVisuals(n) {
+    const stars = document.querySelectorAll('#star-container i');
+    stars.forEach((star, index) => {
+        if (index < n) {
+            star.classList.remove('far'); // Empty
+            star.classList.add('fas');    // Solid
+            star.classList.add('gold');
+        } else {
+            star.classList.remove('fas');
+            star.classList.add('far');
+            star.classList.remove('gold');
+        }
+    });
+}
+
+function saveBookDetails() {
+    if (!currentDetailId) return;
+    
+    const notes = document.getElementById('detail-notes').value;
+    const bookIndex = myBooks.findIndex(b => b.id === currentDetailId);
+    
+    if (bookIndex !== -1) {
+        // Update Local Object
+        myBooks[bookIndex].rating = tempRating;
+        myBooks[bookIndex].notes = notes;
+        
+        // Save to Persistence
+        if (isGuest) {
+            localStorage.setItem('myLibrary', JSON.stringify(myBooks));
+            closeBookDetails();
+            renderLibrary(); // Re-render to reflect changes if any visual indicator exists
+        } else {
+            db.collection('users').doc(currentUser.uid).collection('books').doc(String(currentDetailId))
+              .update({ rating: tempRating, notes: notes })
+              .then(() => {
+                  closeBookDetails();
+                  renderLibrary();
+                  alert("Details Saved!");
+              })
+              .catch(e => alert("Error saving: " + e.message));
+        }
     }
 }
 
 // --- DATA MANAGEMENT ---
 
 function loadFromFirebase() {
-    const libContainer = document.getElementById('my-library');
-    libContainer.innerHTML = '<p class="loading-msg">Syncing with cloud...</p>';
-
-    db.collection('users').doc(currentUser.uid).collection('books').get().then((querySnapshot) => {
+    const c = document.getElementById('my-library');
+    c.innerHTML = '<p class="loading-msg">Syncing...</p>';
+    db.collection('users').doc(currentUser.uid).collection('books').get().then((snap) => {
         myBooks = [];
-        querySnapshot.forEach((doc) => {
-            myBooks.push(doc.data());
-        });
+        snap.forEach((doc) => myBooks.push(doc.data()));
         myBooks.sort((a, b) => b.id - a.id);
         renderLibrary();
-    }).catch((error) => {
-        console.error("Load error:", error);
-        libContainer.innerHTML = '<p>Error downloading data.</p>';
-    });
+    }).catch(e => c.innerHTML = '<p>Error.</p>');
 }
 
 function saveBookData(newBook) {
@@ -110,145 +148,107 @@ function saveBookData(newBook) {
         renderLibrary();
     } else {
         db.collection('users').doc(currentUser.uid).collection('books').doc(String(newBook.id)).set(newBook)
-            .then(() => {
-                myBooks.unshift(newBook);
-                renderLibrary();
-            })
-            .catch((error) => {
-                console.error("Save error:", error);
-                alert("Error saving to Cloud");
-            });
+            .then(() => { myBooks.unshift(newBook); renderLibrary(); })
+            .catch(e => alert("Cloud Error"));
     }
 }
 
 function updateBookStatus(id, type) {
-    const bookIndex = myBooks.findIndex(b => b.id === id);
-    if (bookIndex === -1) return;
-
-    myBooks[bookIndex][type] = !myBooks[bookIndex][type];
+    const idx = myBooks.findIndex(b => b.id === id);
+    if (idx === -1) return;
+    myBooks[idx][type] = !myBooks[idx][type];
+    if (type === 'read' && myBooks[idx].read) myBooks[idx].reading = false;
     
-    // Logic: If Read -> Turn OFF Reading
-    if (type === 'read' && myBooks[bookIndex].read) {
-        myBooks[bookIndex].reading = false;
-    }
-
-    const updatedBook = myBooks[bookIndex];
-
-    if (isGuest) {
-        localStorage.setItem('myLibrary', JSON.stringify(myBooks));
-        renderLibrary();
-    } else {
-        db.collection('users').doc(currentUser.uid).collection('books').doc(String(id)).set(updatedBook)
-        .then(() => {
-            renderLibrary();
-        });
-    }
+    if (isGuest) { localStorage.setItem('myLibrary', JSON.stringify(myBooks)); renderLibrary(); }
+    else { db.collection('users').doc(currentUser.uid).collection('books').doc(String(id)).set(myBooks[idx]).then(() => renderLibrary()); }
 }
 
 function removeBookData(id) {
-    if (!confirm('Delete this book?')) return;
-
+    if (!confirm('Delete?')) return;
     if (isGuest) {
         myBooks = myBooks.filter(b => b.id !== id);
-        localStorage.setItem('myLibrary', JSON.stringify(myBooks));
-        renderLibrary();
+        localStorage.setItem('myLibrary', JSON.stringify(myBooks)); renderLibrary();
     } else {
         db.collection('users').doc(currentUser.uid).collection('books').doc(String(id)).delete()
-            .then(() => {
-                myBooks = myBooks.filter(b => b.id !== id);
-                renderLibrary();
-            }).catch((error) => {
-                console.error("Delete error:", error);
-            });
+        .then(() => { myBooks = myBooks.filter(b => b.id !== id); renderLibrary(); });
     }
 }
 
-// --- SEARCH & UI ---
+// --- SEARCH & RENDER ---
 
 async function searchBooks() {
-    const query = document.getElementById('search-input').value;
-    const resultsContainer = document.getElementById('search-results');
+    const q = document.getElementById('search-input').value;
+    const res = document.getElementById('search-results');
     document.getElementById('search-input').blur();
-
-    if (!query) return;
-    resultsContainer.innerHTML = '<p style="text-align:center; width:100%;">Searching...</p>';
-
+    if (!q) return;
+    res.innerHTML = '<p style="text-align:center;">Searching...</p>';
     try {
-        const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=6&langRestrict=en`);
-        const data = await response.json();
-        resultsContainer.innerHTML = '';
+        const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=6&langRestrict=en`);
+        const d = await r.json();
+        res.innerHTML = '';
+        if (!d.items) { res.innerHTML = '<p>No results.</p>'; return; }
+        
+        d.items.forEach(book => {
+            const i = book.volumeInfo;
+            const img = i.imageLinks ? i.imageLinks.thumbnail : 'https://via.placeholder.com/128x192?text=No+Cover';
+            const safeTitle = i.title.replace(/'/g, "\\'");
+            const safeAuthor = (i.authors ? i.authors[0] : 'Unknown').replace(/'/g, "\\'");
+            const year = i.publishedDate ? i.publishedDate.substring(0, 4) : 'N/A'; // Get Year
 
-        if (!data.items) { resultsContainer.innerHTML = '<p style="text-align:center;">No results found.</p>'; return; }
-
-        data.items.forEach(book => {
-            const info = book.volumeInfo;
-            const thumbnail = info.imageLinks ? info.imageLinks.thumbnail : 'https://via.placeholder.com/128x192?text=No+Cover';
-            const safeTitle = info.title.replace(/'/g, "\\'");
-            const safeAuthor = (info.authors ? info.authors[0] : 'Unknown Author').replace(/'/g, "\\'");
-
-            const bookEl = document.createElement('div');
-            bookEl.className = 'book-card';
-            bookEl.innerHTML = `
-                <img src="${thumbnail}" alt="Cover">
-                <h3>${info.title}</h3>
-                <p>${info.authors ? info.authors[0] : 'Unknown'}</p>
-                <button class="btn-add" onclick="prepareAddBook('${safeTitle}', '${safeAuthor}', '${thumbnail}')">
+            const el = document.createElement('div');
+            el.className = 'book-card';
+            el.innerHTML = `
+                <img src="${img}" alt="Cover">
+                <h3>${i.title}</h3>
+                <p>${i.authors ? i.authors[0] : 'Unknown'}</p>
+                <button class="btn-add" onclick="prepareAddBook('${safeTitle}', '${safeAuthor}', '${img}', '${year}')">
                     <i class="fas fa-plus"></i> Add
                 </button>
             `;
-            resultsContainer.appendChild(bookEl);
+            res.appendChild(el);
         });
-    } catch (e) { resultsContainer.innerHTML = '<p>Connection error.</p>'; }
+    } catch (e) { res.innerHTML = '<p>Error.</p>'; }
 }
 
-function prepareAddBook(title, author, image) {
-    const exists = myBooks.some(book => book.title === title);
-    if (exists) { alert('Book already in library!'); return; }
-
+function prepareAddBook(title, author, image, year) {
+    if (myBooks.some(b => b.title === title)) { alert('Already added!'); return; }
     const newBook = {
         id: Date.now(),
-        title: title, author: author, image: image,
-        owned: false, read: false, reading: false
+        title: title, author: author, image: image, year: year,
+        owned: false, read: false, reading: false,
+        rating: 0, notes: "" // New Fields
     };
-
     saveBookData(newBook);
-    
     const btn = event.target.closest('button');
-    btn.innerHTML = '<i class="fas fa-check"></i>';
-    btn.style.backgroundColor = '#1dd1a1';
+    btn.innerHTML = '<i class="fas fa-check"></i>'; btn.style.backgroundColor = '#1dd1a1';
 }
 
-function renderLibrary(filterType = 'all') {
-    const container = document.getElementById('my-library');
-    container.innerHTML = '';
-
-    const activeBtn = document.querySelector('.filters button.active');
-    if (activeBtn && filterType === 'all') {
-        const text = activeBtn.innerText.toLowerCase();
-        if(text.includes('reading')) filterType = 'reading';
-        else if(text.includes('read')) filterType = 'read';
-        else if(text.includes('owned')) filterType = 'owned';
+function renderLibrary(filter = 'all') {
+    const c = document.getElementById('my-library');
+    c.innerHTML = '';
+    const ab = document.querySelector('.filters button.active');
+    if (ab && filter === 'all') {
+        const t = ab.innerText.toLowerCase();
+        if(t.includes('reading')) filter = 'reading';
+        else if(t.includes('read')) filter = 'read';
+        else if(t.includes('owned')) filter = 'owned';
     }
+    let fBooks = myBooks;
+    if (filter === 'owned') fBooks = myBooks.filter(b => b.owned);
+    if (filter === 'read') fBooks = myBooks.filter(b => b.read);
+    if (filter === 'reading') fBooks = myBooks.filter(b => b.reading);
 
-    let filtered = myBooks;
-    if (filterType === 'owned') filtered = myBooks.filter(b => b.owned);
-    if (filterType === 'read') filtered = myBooks.filter(b => b.read);
-    if (filterType === 'reading') filtered = myBooks.filter(b => b.reading);
+    if (fBooks.length === 0) { c.innerHTML = '<p class="loading-msg" style="width:100%;text-align:center;color:#999;">No books.</p>'; return; }
 
-    if (filtered.length === 0) {
-        container.innerHTML = '<p class="loading-msg" style="width:100%; text-align:center; color:#999;">No books here yet.</p>';
-        return;
-    }
-
-    filtered.forEach(book => {
-        const div = document.createElement('div');
-        div.className = 'book-card';
-        // REORDERED BADGES HERE: Owned | Reading | Read
-        div.innerHTML = `
+    fBooks.forEach(book => {
+        const el = document.createElement('div');
+        el.className = 'book-card';
+        // CLICK ON IMAGE TO OPEN DETAILS
+        el.innerHTML = `
             <button class="btn-delete" onclick="removeBookData(${book.id})"><i class="fas fa-times"></i></button>
-            <img src="${book.image}" alt="Cover">
+            <img src="${book.image}" alt="Cover" onclick="openBookDetails(${book.id})">
             <div class="card-content">
-                <h3>${book.title}</h3>
+                <h3 onclick="openBookDetails(${book.id})" style="cursor:pointer">${book.title}</h3>
                 <p>${book.author}</p>
                 <div class="status-area">
                     <div class="badge ${book.owned ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'owned')">Owned</div>
@@ -257,7 +257,7 @@ function renderLibrary(filterType = 'all') {
                 </div>
             </div>
         `;
-        container.appendChild(div);
+        c.appendChild(el);
     });
 }
 
@@ -266,9 +266,11 @@ function filterLibrary(type) {
     event.target.closest('button').classList.add('active');
     renderLibrary(type);
 }
-
 function shareLibrary() {
-    let text = "📚 My Book List:\n\n";
-    myBooks.forEach(b => text += `- ${b.title}\n`);
-    navigator.clipboard.writeText(text).then(() => alert("List copied to clipboard!")).catch(() => alert("Copy failed"));
+    let t = "📚 My Book List:\n\n";
+    myBooks.forEach(b => {
+        const r = b.rating > 0 ? ' (' + '★'.repeat(b.rating) + ')' : '';
+        t += `- ${b.title}${r}\n`;
+    });
+    navigator.clipboard.writeText(t).then(()=>alert("Copied!")).catch(()=>alert("Error"));
 }
