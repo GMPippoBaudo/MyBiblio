@@ -20,6 +20,7 @@ let myBooks = [];
 let isGuest = false;
 let currentDetailId = null;
 let tempRating = 0;
+let currentSort = 'newest'; // NEW: Variable to track sort preference
 
 // --- LOGIN ---
 auth.onAuthStateChanged(user => {
@@ -69,7 +70,6 @@ function openBookDetails(id) {
 
     updateStarVisuals(tempRating);
 
-    // DIRECT STYLE DISPLAY
     const overlay = document.getElementById('detail-overlay');
     overlay.style.display = 'flex'; 
 }
@@ -134,8 +134,7 @@ function loadFromFirebase() {
     db.collection('users').doc(currentUser.uid).collection('books').get().then((snap) => {
         myBooks = [];
         snap.forEach((doc) => myBooks.push(doc.data()));
-        myBooks.sort((a, b) => b.id - a.id);
-        renderLibrary();
+        renderLibrary(); // Render handles sorting
     }).catch(e => c.innerHTML = '<p>Error.</p>');
 }
 
@@ -221,6 +220,12 @@ function prepareAddBook(title, author, image, year) {
     btn.innerHTML = '<i class="fas fa-check"></i>'; btn.style.backgroundColor = '#1dd1a1';
 }
 
+// NEW SORT FUNCTION
+function changeSort() {
+    currentSort = document.getElementById('sort-select').value;
+    renderLibrary();
+}
+
 function renderLibrary(filter = 'all') {
     const c = document.getElementById('my-library');
     c.innerHTML = '';
@@ -231,10 +236,23 @@ function renderLibrary(filter = 'all') {
         else if(t.includes('read')) filter = 'read';
         else if(t.includes('owned')) filter = 'owned';
     }
-    let fBooks = myBooks;
-    if (filter === 'owned') fBooks = myBooks.filter(b => b.owned);
-    if (filter === 'read') fBooks = myBooks.filter(b => b.read);
-    if (filter === 'reading') fBooks = myBooks.filter(b => b.reading);
+    
+    // Create a COPY of the array to filter and sort
+    let fBooks = myBooks.slice();
+
+    if (filter === 'owned') fBooks = fBooks.filter(b => b.owned);
+    if (filter === 'read') fBooks = fBooks.filter(b => b.read);
+    if (filter === 'reading') fBooks = fBooks.filter(b => b.reading);
+
+    // --- SORT LOGIC ---
+    if (currentSort === 'title') {
+        fBooks.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (currentSort === 'author') {
+        fBooks.sort((a, b) => a.author.localeCompare(b.author));
+    } else {
+        // Default: Newest first (ID is timestamp)
+        fBooks.sort((a, b) => b.id - a.id);
+    }
 
     if (fBooks.length === 0) { c.innerHTML = '<p class="loading-msg" style="width:100%;text-align:center;color:#999;">No books.</p>'; return; }
 

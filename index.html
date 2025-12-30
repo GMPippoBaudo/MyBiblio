@@ -90,7 +90,12 @@
         <section class="library-section" id="my-collection">
             <div class="section-header">
                 <h2>My Collection</h2>
-                </div>
+                <select id="sort-select" onchange="changeSort()">
+                    <option value="newest">Newest</option>
+                    <option value="title">Title (A-Z)</option>
+                    <option value="author">Author (A-Z)</option>
+                </select>
+            </div>
 
             <div class="filters">
                 <button onclick="filterLibrary('all')" class="active">All</button>

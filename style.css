@@ -76,6 +76,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
+/* --- SORT DROPDOWN (NEW) --- */
+#sort-select {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #555;
+    font-size: 0.9rem;
+    outline: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
 /* --- EXISTING STYLES --- */
 #login-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
