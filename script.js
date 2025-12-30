@@ -72,9 +72,16 @@ function logout() {
     }
 }
 
+// --- SCROLL FUNCTION (MOBILE OPTIMIZED) ---
 function scrollToLibrary() {
     const section = document.getElementById('my-collection');
-    if (section) section.scrollIntoView({ behavior: 'smooth' });
+    if (section) {
+        // Calculate exact position minus header height
+        const y = section.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    } else {
+        console.log("Error: 'my-collection' section not found.");
+    }
 }
 
 // --- DATA MANAGEMENT ---
@@ -118,17 +125,12 @@ function updateBookStatus(id, type) {
     const bookIndex = myBooks.findIndex(b => b.id === id);
     if (bookIndex === -1) return;
 
-    // Toggle the clicked status
     myBooks[bookIndex][type] = !myBooks[bookIndex][type];
     
-    // --- SPECIAL LOGIC ---
-    // If marking as "Read", automatically Turn OFF "Reading"
+    // Logic: If Read -> Turn OFF Reading
     if (type === 'read' && myBooks[bookIndex].read) {
         myBooks[bookIndex].reading = false;
     }
-    // Optional: If marking as "Reading", maybe Turn OFF "Read" (re-reading)?
-    // Uncomment next line if you want that behavior:
-    // if (type === 'reading' && myBooks[bookIndex].reading) myBooks[bookIndex].read = false;
 
     const updatedBook = myBooks[bookIndex];
 
@@ -136,7 +138,6 @@ function updateBookStatus(id, type) {
         localStorage.setItem('myLibrary', JSON.stringify(myBooks));
         renderLibrary();
     } else {
-        // Update entire book object in Firebase to ensure all fields (reading/read) sync
         db.collection('users').doc(currentUser.uid).collection('books').doc(String(id)).set(updatedBook)
         .then(() => {
             renderLibrary();
@@ -207,9 +208,7 @@ function prepareAddBook(title, author, image) {
     const newBook = {
         id: Date.now(),
         title: title, author: author, image: image,
-        owned: false, 
-        read: false,
-        reading: false // Initialize new field
+        owned: false, read: false, reading: false
     };
 
     saveBookData(newBook);
@@ -225,7 +224,6 @@ function renderLibrary(filterType = 'all') {
 
     const activeBtn = document.querySelector('.filters button.active');
     if (activeBtn && filterType === 'all') {
-        // Keep filter active during refresh
         const text = activeBtn.innerText.toLowerCase();
         if(text.includes('reading')) filterType = 'reading';
         else if(text.includes('read')) filterType = 'read';
@@ -245,7 +243,7 @@ function renderLibrary(filterType = 'all') {
     filtered.forEach(book => {
         const div = document.createElement('div');
         div.className = 'book-card';
-        // Added the 3rd Badge for "Reading"
+        // REORDERED BADGES HERE: Owned | Reading | Read
         div.innerHTML = `
             <button class="btn-delete" onclick="removeBookData(${book.id})"><i class="fas fa-times"></i></button>
             <img src="${book.image}" alt="Cover">
@@ -253,9 +251,9 @@ function renderLibrary(filterType = 'all') {
                 <h3>${book.title}</h3>
                 <p>${book.author}</p>
                 <div class="status-area">
+                    <div class="badge ${book.owned ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'owned')">Owned</div>
                     <div class="badge reading-badge ${book.reading ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'reading')">Reading</div>
                     <div class="badge ${book.read ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'read')">Read</div>
-                    <div class="badge ${book.owned ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'owned')">Owned</div>
                 </div>
             </div>
         `;

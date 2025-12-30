@@ -5,7 +5,7 @@
     --white: #ffffff;
     --danger: #ff6b6b;
     --success: #1dd1a1;
-    --reading-color: #3498db; /* New color for reading status */
+    --reading-color: #3498db;
     --google: #4285F4;
 }
 
@@ -118,10 +118,7 @@ button:active { transform: scale(0.95); }
 .status-area { display: flex; gap: 5px; width: 100%; margin-top: auto; }
 .badge { flex: 1; padding: 6px 2px; font-size: 0.75rem; border-radius: 6px; text-align: center; background: #f1f2f6; color: #aaa; border: 1px solid #ddd; cursor: pointer; }
 
-/* Color logic for badges */
 .badge.active { background: var(--success); color: white; border-color: var(--success); font-weight: bold; }
-
-/* Special color for Reading badge */
 .badge.reading-badge.active { background: var(--reading-color); border-color: var(--reading-color); }
 
 .btn-delete { position: absolute; top: -5px; right: -5px; background: white; color: var(--danger); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; z-index: 10; }
