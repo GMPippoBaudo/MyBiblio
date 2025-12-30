@@ -3,7 +3,7 @@
     --accent: #e67e22;
     --bg: #f8f9fa;
     --white: #ffffff;
-    --danger: #ff4757; /* Rosso acceso */
+    --danger: #ff4757;
     --success: #1dd1a1;
     --reading-color: #3498db;
     --gold: #f1c40f;
@@ -16,7 +16,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 /* DETAIL OVERLAY */
 #detail-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); /* Sfondo leggermente più scuro per contrasto */
+    background: rgba(0,0,0,0.85);
     z-index: 2000;
     display: flex; justify-content: center; align-items: center;
     padding: 20px;
@@ -31,33 +31,20 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
-/* --- TASTO CHIUSURA AGGIORNATO --- */
 .btn-close-detail {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background-color: var(--danger); /* Sfondo Rosso */
-    color: white; /* X Bianca */
-    border: none;
-    border-radius: 50%;
-    width: 36px;  /* Più grande per il dito */
-    height: 36px;
-    cursor: pointer;
-    z-index: 10;
+    position: absolute; top: 15px; right: 15px;
+    background-color: var(--danger);
+    color: white; border: none; border-radius: 50%;
+    width: 36px; height: 36px; cursor: pointer; z-index: 10;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem;
-    box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4); /* Ombra rossa leggera */
+    font-size: 1.1rem; box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
     transition: transform 0.2s;
 }
 .btn-close-detail:active { transform: scale(0.9); }
 
-/* --- HEADER DETTAGLIO AGGIORNATO --- */
 .detail-header { 
-    display: flex; 
-    gap: 20px; 
-    align-items: flex-start;
-    margin-top: 10px; /* Spinge giù il contenuto per non toccare il bordo alto */
-    padding-right: 40px; /* SPAZIO DI SICUREZZA: il testo non andrà mai sotto la X */
+    display: flex; gap: 20px; align-items: flex-start;
+    margin-top: 10px; padding-right: 40px; 
 }
 
 #detail-img { width: 100px; height: 150px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
@@ -65,21 +52,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 .detail-info p { margin: 0; color: #666; font-size: 0.95rem; }
 .meta-text { font-size: 0.8rem !important; margin-top: 5px !important; color: #999 !important; }
 
-/* RATING STARS */
 .rating-section { text-align: center; margin: 25px 0; }
 .rating-section h3 { margin-bottom: 10px; font-size: 1rem; color: #555; }
 .stars { font-size: 2.2rem; color: #ddd; cursor: pointer; display: flex; justify-content: center; gap: 5px; }
 .stars .gold { color: var(--gold); drop-shadow: 0 2px 4px rgba(241, 196, 15, 0.4); }
 
-/* NOTES */
 .notes-section h3 { margin-bottom: 10px; font-size: 1rem; color: #555; }
 .notes-section textarea {
     width: 100%; height: 120px; padding: 15px;
     border: 2px solid #eee; border-radius: 12px;
-    font-family: inherit; resize: none;
-    font-size: 0.95rem;
-    background-color: #fafafa;
-    transition: border-color 0.3s;
+    font-family: inherit; resize: none; font-size: 0.95rem;
+    background-color: #fafafa; transition: border-color 0.3s;
 }
 .notes-section textarea:focus { border-color: var(--primary); outline: none; background: white; }
 
@@ -93,9 +76,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-
-/* --- EXISTING STYLES (INVARIATI) --- */
-
+/* --- EXISTING STYLES --- */
 #login-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--primary); z-index: 1000;
@@ -137,7 +118,6 @@ button:active { transform: scale(0.95); }
 .results-grid, .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
 @media (max-width: 450px) { .library-grid { grid-template-columns: 1fr; } .results-grid { grid-template-columns: repeat(2, 1fr); } }
 
-/* BOOK CARD */
 .book-card { background: var(--white); border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
 @media (max-width: 450px) {
     .library-grid .book-card { flex-direction: row; text-align: left; align-items: flex-start; }
@@ -151,7 +131,7 @@ button:active { transform: scale(0.95); }
 .library-section { scroll-margin-top: 160px; }
 .btn-add { background-color: var(--accent); color: white; width: 100%; margin-top: auto; padding: 8px; }
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.btn-share { background-color: #3498db; color: white; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+
 .filters { display: flex; background: #e1e4e8; padding: 4px; border-radius: 10px; margin-bottom: 15px; }
 .filters button { flex: 1; background: transparent; color: #666; padding: 8px; font-size: 0.8rem; white-space: nowrap; }
 .filters button.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }

@@ -52,7 +52,7 @@ function scrollToLibrary() {
     if (s) window.scrollTo({ top: s.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' });
 }
 
-// --- BOOK DETAIL FUNCTIONS (UPDATED FOR MOBILE STABILITY) ---
+// --- BOOK DETAIL FUNCTIONS ---
 
 function openBookDetails(id) {
     const book = myBooks.find(b => b.id === id);
@@ -61,23 +61,20 @@ function openBookDetails(id) {
     currentDetailId = id;
     tempRating = book.rating || 0;
 
-    // Populate Info
     document.getElementById('detail-img').src = book.image;
     document.getElementById('detail-title').innerText = book.title;
     document.getElementById('detail-author').innerText = book.author;
     document.getElementById('detail-year').innerText = "Published: " + (book.year || "Unknown");
     document.getElementById('detail-notes').value = book.notes || "";
 
-    // Set Stars
     updateStarVisuals(tempRating);
 
-    // Show Overlay using DIRECT STYLE (Fixes mobile cache bug)
+    // DIRECT STYLE DISPLAY
     const overlay = document.getElementById('detail-overlay');
     overlay.style.display = 'flex'; 
 }
 
 function closeBookDetails() {
-    // Hide Overlay using DIRECT STYLE
     const overlay = document.getElementById('detail-overlay');
     overlay.style.display = 'none';
     currentDetailId = null;
@@ -244,7 +241,6 @@ function renderLibrary(filter = 'all') {
     fBooks.forEach(book => {
         const el = document.createElement('div');
         el.className = 'book-card';
-        // CLICK EVENTS ARE NOW VERY EXPLICIT
         el.innerHTML = `
             <button class="btn-delete" onclick="removeBookData(${book.id})"><i class="fas fa-times"></i></button>
             <img src="${book.image}" alt="Cover" onclick="openBookDetails(${book.id})">
@@ -266,12 +262,4 @@ function filterLibrary(type) {
     document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
     event.target.closest('button').classList.add('active');
     renderLibrary(type);
-}
-function shareLibrary() {
-    let t = "📚 My Book List:\n\n";
-    myBooks.forEach(b => {
-        const r = b.rating > 0 ? ' (' + '★'.repeat(b.rating) + ')' : '';
-        t += `- ${b.title}${r}\n`;
-    });
-    navigator.clipboard.writeText(t).then(()=>alert("Copied!")).catch(()=>alert("Error"));
 }
