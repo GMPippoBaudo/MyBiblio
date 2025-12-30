@@ -5,6 +5,7 @@
     --white: #ffffff;
     --danger: #ff6b6b;
     --success: #1dd1a1;
+    --reading-color: #3498db; /* New color for reading status */
     --google: #4285F4;
 }
 
@@ -51,7 +52,6 @@ header {
 .btn-logout { background: transparent; padding: 5px; color: white; font-size: 1.1rem; }
 header h1 { font-size: 1.5rem; margin: 0; }
 
-/* NEW HEADER NAV BUTTON */
 .btn-header-nav {
     background: rgba(255,255,255,0.15);
     border: 1px solid rgba(255,255,255,0.3);
@@ -103,10 +103,7 @@ button:active { transform: scale(0.95); }
 .book-card h3 { font-size: 0.95rem; margin: 5px 0; -webkit-line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; }
 .book-card p { font-size: 0.8rem; color: #888; margin-bottom: 10px; }
 
-/* LIBRARY SECTION WITH SCROLL MARGIN */
-.library-section {
-    scroll-margin-top: 160px; /* Prevents sticky header from covering the title */
-}
+.library-section { scroll-margin-top: 160px; }
 
 /* ACTIONS */
 .btn-add { background-color: var(--accent); color: white; width: 100%; margin-top: auto; padding: 8px; }
@@ -114,11 +111,18 @@ button:active { transform: scale(0.95); }
 .btn-share { background-color: #3498db; color: white; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
 
 .filters { display: flex; background: #e1e4e8; padding: 4px; border-radius: 10px; margin-bottom: 15px; }
-.filters button { flex: 1; background: transparent; color: #666; padding: 8px; font-size: 0.85rem; }
+.filters button { flex: 1; background: transparent; color: #666; padding: 8px; font-size: 0.8rem; white-space: nowrap; }
 .filters button.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
+/* BADGES */
 .status-area { display: flex; gap: 5px; width: 100%; margin-top: auto; }
-.badge { flex: 1; padding: 6px 2px; font-size: 0.75rem; border-radius: 6px; text-align: center; background: #f1f2f6; color: #aaa; border: 1px solid #ddd; }
+.badge { flex: 1; padding: 6px 2px; font-size: 0.75rem; border-radius: 6px; text-align: center; background: #f1f2f6; color: #aaa; border: 1px solid #ddd; cursor: pointer; }
+
+/* Color logic for badges */
 .badge.active { background: var(--success); color: white; border-color: var(--success); font-weight: bold; }
+
+/* Special color for Reading badge */
+.badge.reading-badge.active { background: var(--reading-color); border-color: var(--reading-color); }
+
 .btn-delete { position: absolute; top: -5px; right: -5px; background: white; color: var(--danger); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 0; z-index: 10; }
 hr { border: 0; border-top: 1px dashed #ccc; margin: 2rem 0; }

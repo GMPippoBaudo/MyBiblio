@@ -9,6 +9,7 @@ const firebaseConfig = {
     appId: "1:349757686044:web:00f1423d133ae7339afad9"
   };
 
+
 // Initialize Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
@@ -49,8 +50,6 @@ function loginAsGuest() {
     currentUser = null;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('user-display-name').innerText = "Guest Mode (Local)";
-    
-    // Load from LocalStorage
     myBooks = JSON.parse(localStorage.getItem('myLibrary')) || [];
     renderLibrary();
 }
@@ -60,8 +59,6 @@ function handleUserLogin(user) {
     isGuest = false;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('user-display-name').innerText = user.displayName;
-    
-    // Load from Firestore
     loadFromFirebase();
 }
 
@@ -75,12 +72,9 @@ function logout() {
     }
 }
 
-// --- NEW SCROLL FUNCTION ---
 function scrollToLibrary() {
     const section = document.getElementById('my-collection');
-    if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (section) section.scrollIntoView({ behavior: 'smooth' });
 }
 
 // --- DATA MANAGEMENT ---
@@ -124,16 +118,27 @@ function updateBookStatus(id, type) {
     const bookIndex = myBooks.findIndex(b => b.id === id);
     if (bookIndex === -1) return;
 
+    // Toggle the clicked status
     myBooks[bookIndex][type] = !myBooks[bookIndex][type];
+    
+    // --- SPECIAL LOGIC ---
+    // If marking as "Read", automatically Turn OFF "Reading"
+    if (type === 'read' && myBooks[bookIndex].read) {
+        myBooks[bookIndex].reading = false;
+    }
+    // Optional: If marking as "Reading", maybe Turn OFF "Read" (re-reading)?
+    // Uncomment next line if you want that behavior:
+    // if (type === 'reading' && myBooks[bookIndex].reading) myBooks[bookIndex].read = false;
+
     const updatedBook = myBooks[bookIndex];
 
     if (isGuest) {
         localStorage.setItem('myLibrary', JSON.stringify(myBooks));
         renderLibrary();
     } else {
-        db.collection('users').doc(currentUser.uid).collection('books').doc(String(id)).update({
-            [type]: updatedBook[type]
-        }).then(() => {
+        // Update entire book object in Firebase to ensure all fields (reading/read) sync
+        db.collection('users').doc(currentUser.uid).collection('books').doc(String(id)).set(updatedBook)
+        .then(() => {
             renderLibrary();
         });
     }
@@ -202,7 +207,9 @@ function prepareAddBook(title, author, image) {
     const newBook = {
         id: Date.now(),
         title: title, author: author, image: image,
-        owned: false, read: false
+        owned: false, 
+        read: false,
+        reading: false // Initialize new field
     };
 
     saveBookData(newBook);
@@ -218,22 +225,27 @@ function renderLibrary(filterType = 'all') {
 
     const activeBtn = document.querySelector('.filters button.active');
     if (activeBtn && filterType === 'all') {
-        if(activeBtn.innerText.includes('Owned')) filterType = 'owned';
-        if(activeBtn.innerText.includes('Read')) filterType = 'read';
+        // Keep filter active during refresh
+        const text = activeBtn.innerText.toLowerCase();
+        if(text.includes('reading')) filterType = 'reading';
+        else if(text.includes('read')) filterType = 'read';
+        else if(text.includes('owned')) filterType = 'owned';
     }
 
     let filtered = myBooks;
     if (filterType === 'owned') filtered = myBooks.filter(b => b.owned);
     if (filterType === 'read') filtered = myBooks.filter(b => b.read);
+    if (filterType === 'reading') filtered = myBooks.filter(b => b.reading);
 
     if (filtered.length === 0) {
-        container.innerHTML = '<p class="loading-msg" style="width:100%; text-align:center; color:#999;">No books found.</p>';
+        container.innerHTML = '<p class="loading-msg" style="width:100%; text-align:center; color:#999;">No books here yet.</p>';
         return;
     }
 
     filtered.forEach(book => {
         const div = document.createElement('div');
         div.className = 'book-card';
+        // Added the 3rd Badge for "Reading"
         div.innerHTML = `
             <button class="btn-delete" onclick="removeBookData(${book.id})"><i class="fas fa-times"></i></button>
             <img src="${book.image}" alt="Cover">
@@ -241,8 +253,9 @@ function renderLibrary(filterType = 'all') {
                 <h3>${book.title}</h3>
                 <p>${book.author}</p>
                 <div class="status-area">
-                    <div class="badge ${book.owned ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'owned')">Owned</div>
+                    <div class="badge reading-badge ${book.reading ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'reading')">Reading</div>
                     <div class="badge ${book.read ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'read')">Read</div>
+                    <div class="badge ${book.owned ? 'active' : ''}" onclick="updateBookStatus(${book.id}, 'owned')">Owned</div>
                 </div>
             </div>
         `;
