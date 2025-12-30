@@ -1,5 +1,5 @@
 // --- FIREBASE CONFIGURATION ---
-// PASTE YOUR CONFIGURATION HERE (Keep your existing one!)
+// ⚠️ PASTE YOUR CONFIGURATION HERE AGAIN!
 const firebaseConfig = {
     apiKey: "AIzaSyB_43zHxg9H43UrXYX8CcwYgKjMPpzl1rk",
     authDomain: "mia-libreria.firebaseapp.com",
@@ -8,7 +8,6 @@ const firebaseConfig = {
     messagingSenderId: "349757686044",
     appId: "1:349757686044:web:00f1423d133ae7339afad9"
   };
-
 
 // Initialize Firebase
 if (!firebase.apps.length) {
@@ -73,6 +72,14 @@ function logout() {
         auth.signOut().then(() => {
             location.reload();
         });
+    }
+}
+
+// --- NEW SCROLL FUNCTION ---
+function scrollToLibrary() {
+    const section = document.getElementById('my-collection');
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
     }
 }
 
@@ -161,8 +168,7 @@ async function searchBooks() {
     resultsContainer.innerHTML = '<p style="text-align:center; width:100%;">Searching...</p>';
 
     try {
-        // Added langRestrict=en for English results preference, remove if you want global
-        const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=6`);
+        const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=6&langRestrict=en`);
         const data = await response.json();
         resultsContainer.innerHTML = '';
 

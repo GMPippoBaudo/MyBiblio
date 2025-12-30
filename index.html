@@ -42,6 +42,10 @@
                 <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
             </div>
             <h1>Library</h1>
+            
+            <button class="btn-header-nav" onclick="scrollToLibrary()">
+                <i class="fas fa-arrow-down"></i> My Collection
+            </button>
         </div>
     </header>
 
@@ -56,7 +60,7 @@
 
         <hr>
 
-        <section class="library-section">
+        <section class="library-section" id="my-collection">
             <div class="section-header">
                 <h2>My Collection</h2>
                 <button class="btn-share" onclick="shareLibrary()" title="Export list"><i class="fas fa-share-alt"></i></button>

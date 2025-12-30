@@ -51,6 +51,19 @@ header {
 .btn-logout { background: transparent; padding: 5px; color: white; font-size: 1.1rem; }
 header h1 { font-size: 1.5rem; margin: 0; }
 
+/* NEW HEADER NAV BUTTON */
+.btn-header-nav {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    margin-top: 10px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 20px;
+    transition: background 0.3s;
+}
+.btn-header-nav:active { background: rgba(255,255,255,0.3); }
+
 /* SEARCH & GRIDS */
 main { max-width: 800px; margin: 0 auto; padding: 1rem; }
 .search-box { display: flex; gap: 10px; margin-bottom: 1.5rem; }
@@ -89,6 +102,11 @@ button:active { transform: scale(0.95); }
 .book-card img { width: 100px; height: 145px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; background: #eee; }
 .book-card h3 { font-size: 0.95rem; margin: 5px 0; -webkit-line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; }
 .book-card p { font-size: 0.8rem; color: #888; margin-bottom: 10px; }
+
+/* LIBRARY SECTION WITH SCROLL MARGIN */
+.library-section {
+    scroll-margin-top: 160px; /* Prevents sticky header from covering the title */
+}
 
 /* ACTIONS */
 .btn-add { background-color: var(--accent); color: white; width: 100%; margin-top: auto; padding: 8px; }
