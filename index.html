@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>La Mia Biblioteca Cloud</title>
+    <title>My Cloud Library</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#2c3e50">
+
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -15,35 +20,35 @@
 
     <div id="login-overlay">
         <div class="login-box">
-            <h1><i class="fas fa-book-open"></i> Biblioteca</h1>
-            <p>Salva i tuoi libri nel cloud e accedivi ovunque.</p>
+            <h1><i class="fas fa-book-open"></i> My Library</h1>
+            <p>Save your books in the cloud and access them everywhere.</p>
             
             <button class="btn-google" onclick="loginWithGoogle()">
-                <i class="fab fa-google"></i> Accedi con Google
+                <i class="fab fa-google"></i> Sign in with Google
             </button>
             
             <button class="btn-guest" onclick="loginAsGuest()">
-                <i class="fas fa-user-secret"></i> Continua come Ospite
+                <i class="fas fa-user-secret"></i> Continue as Guest
             </button>
             
-            <p class="small-info">La modalità ospite salva solo su questo dispositivo.</p>
+            <p class="small-info">Guest mode saves data on this device only.</p>
         </div>
     </div>
 
     <header>
         <div class="header-content">
             <div class="user-info">
-                <span id="user-display-name">Ospite</span>
+                <span id="user-display-name">Guest</span>
                 <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
             </div>
-            <h1>Biblioteca</h1>
+            <h1>Library</h1>
         </div>
     </header>
 
     <main>
         <section class="search-section">
             <div class="search-box">
-                <input type="text" id="search-input" placeholder="Cerca titolo o autore...">
+                <input type="text" id="search-input" placeholder="Search title or author...">
                 <button onclick="searchBooks()"><i class="fas fa-search"></i></button>
             </div>
             <div id="search-results" class="results-grid"></div>
@@ -53,18 +58,18 @@
 
         <section class="library-section">
             <div class="section-header">
-                <h2>La tua collezione</h2>
-                <button class="btn-share" onclick="shareLibrary()" title="Esporta lista"><i class="fas fa-share-alt"></i></button>
+                <h2>My Collection</h2>
+                <button class="btn-share" onclick="shareLibrary()" title="Export list"><i class="fas fa-share-alt"></i></button>
             </div>
 
             <div class="filters">
-                <button onclick="filterLibrary('all')" class="active">Tutti</button>
-                <button onclick="filterLibrary('owned')"><i class="fas fa-check"></i></button>
-                <button onclick="filterLibrary('read')"><i class="fas fa-book-reader"></i></button>
+                <button onclick="filterLibrary('all')" class="active">All</button>
+                <button onclick="filterLibrary('owned')"><i class="fas fa-check"></i> Owned</button>
+                <button onclick="filterLibrary('read')"><i class="fas fa-book-reader"></i> Read</button>
             </div>
             
             <div id="my-library" class="library-grid">
-                <p class="loading-msg">Caricamento libri...</p>
+                <p class="loading-msg">Loading books...</p>
             </div>
         </section>
     </main>
