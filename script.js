@@ -9,6 +9,7 @@ const firebaseConfig = {
     appId: "1:349757686044:web:00f1423d133ae7339afad9"
   };
 
+
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -17,8 +18,8 @@ const db = firebase.firestore();
 let currentUser = null;
 let myBooks = [];
 let isGuest = false;
-let currentDetailId = null; // To track which book is open in modal
-let tempRating = 0; // Temporary rating before saving
+let currentDetailId = null;
+let tempRating = 0;
 
 // --- LOGIN ---
 auth.onAuthStateChanged(user => {
@@ -51,7 +52,7 @@ function scrollToLibrary() {
     if (s) window.scrollTo({ top: s.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' });
 }
 
-// --- BOOK DETAIL FUNCTIONS (NEW) ---
+// --- BOOK DETAIL FUNCTIONS (UPDATED FOR MOBILE STABILITY) ---
 
 function openBookDetails(id) {
     const book = myBooks.find(b => b.id === id);
@@ -60,7 +61,7 @@ function openBookDetails(id) {
     currentDetailId = id;
     tempRating = book.rating || 0;
 
-    // Populate Modal Info
+    // Populate Info
     document.getElementById('detail-img').src = book.image;
     document.getElementById('detail-title').innerText = book.title;
     document.getElementById('detail-author').innerText = book.author;
@@ -70,12 +71,15 @@ function openBookDetails(id) {
     // Set Stars
     updateStarVisuals(tempRating);
 
-    // Show Overlay
-    document.getElementById('detail-overlay').classList.remove('hidden');
+    // Show Overlay using DIRECT STYLE (Fixes mobile cache bug)
+    const overlay = document.getElementById('detail-overlay');
+    overlay.style.display = 'flex'; 
 }
 
 function closeBookDetails() {
-    document.getElementById('detail-overlay').classList.add('hidden');
+    // Hide Overlay using DIRECT STYLE
+    const overlay = document.getElementById('detail-overlay');
+    overlay.style.display = 'none';
     currentDetailId = null;
 }
 
@@ -88,8 +92,8 @@ function updateStarVisuals(n) {
     const stars = document.querySelectorAll('#star-container i');
     stars.forEach((star, index) => {
         if (index < n) {
-            star.classList.remove('far'); // Empty
-            star.classList.add('fas');    // Solid
+            star.classList.remove('far'); 
+            star.classList.add('fas');    
             star.classList.add('gold');
         } else {
             star.classList.remove('fas');
@@ -106,22 +110,19 @@ function saveBookDetails() {
     const bookIndex = myBooks.findIndex(b => b.id === currentDetailId);
     
     if (bookIndex !== -1) {
-        // Update Local Object
         myBooks[bookIndex].rating = tempRating;
         myBooks[bookIndex].notes = notes;
         
-        // Save to Persistence
         if (isGuest) {
             localStorage.setItem('myLibrary', JSON.stringify(myBooks));
             closeBookDetails();
-            renderLibrary(); // Re-render to reflect changes if any visual indicator exists
+            renderLibrary(); 
         } else {
             db.collection('users').doc(currentUser.uid).collection('books').doc(String(currentDetailId))
               .update({ rating: tempRating, notes: notes })
               .then(() => {
                   closeBookDetails();
                   renderLibrary();
-                  alert("Details Saved!");
               })
               .catch(e => alert("Error saving: " + e.message));
         }
@@ -193,7 +194,7 @@ async function searchBooks() {
             const img = i.imageLinks ? i.imageLinks.thumbnail : 'https://via.placeholder.com/128x192?text=No+Cover';
             const safeTitle = i.title.replace(/'/g, "\\'");
             const safeAuthor = (i.authors ? i.authors[0] : 'Unknown').replace(/'/g, "\\'");
-            const year = i.publishedDate ? i.publishedDate.substring(0, 4) : 'N/A'; // Get Year
+            const year = i.publishedDate ? i.publishedDate.substring(0, 4) : 'N/A';
 
             const el = document.createElement('div');
             el.className = 'book-card';
@@ -216,7 +217,7 @@ function prepareAddBook(title, author, image, year) {
         id: Date.now(),
         title: title, author: author, image: image, year: year,
         owned: false, read: false, reading: false,
-        rating: 0, notes: "" // New Fields
+        rating: 0, notes: "" 
     };
     saveBookData(newBook);
     const btn = event.target.closest('button');
@@ -243,7 +244,7 @@ function renderLibrary(filter = 'all') {
     fBooks.forEach(book => {
         const el = document.createElement('div');
         el.className = 'book-card';
-        // CLICK ON IMAGE TO OPEN DETAILS
+        // CLICK EVENTS ARE NOW VERY EXPLICIT
         el.innerHTML = `
             <button class="btn-delete" onclick="removeBookData(${book.id})"><i class="fas fa-times"></i></button>
             <img src="${book.image}" alt="Cover" onclick="openBookDetails(${book.id})">
