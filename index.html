@@ -97,6 +97,17 @@
         </div>
 
         <div id="view-collection" class="view-section">
+            
+            <div class="profile-area">
+                <div class="profile-pic-wrapper" onclick="document.getElementById('profile-upload').click()">
+                    <img id="profile-pic-display" src="https://via.placeholder.com/150?text=+" alt="Profile">
+                    <div class="edit-icon"><i class="fas fa-camera"></i></div>
+                </div>
+                <input type="file" id="profile-upload" accept="image/*" hidden onchange="uploadProfilePhoto(this)">
+                
+                <h2 id="profile-name-large">Guest User</h2>
+            </div>
+
             <div class="section-header">
                 <h2>My Collection</h2>
                 <select id="sort-select" onchange="changeSort()">
@@ -141,8 +152,7 @@
 
             <div class="top-authors-section">
                 <h3><i class="fas fa-crown"></i> Top Authors</h3>
-                <ul id="top-authors-list">
-                    </ul>
+                <ul id="top-authors-list"></ul>
             </div>
         </div>
     </main>

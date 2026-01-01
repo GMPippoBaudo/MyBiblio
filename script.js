@@ -9,7 +9,6 @@ const firebaseConfig = {
     appId: "1:349757686044:web:00f1423d133ae7339afad9"
   };
 
-
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -36,74 +35,97 @@ function loginAsGuest() {
     isGuest = true; currentUser = null;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('user-display-name').innerText = "Guest Mode";
+    document.getElementById('profile-name-large').innerText = "Guest User";
+    
+    // Load Photo Guest
+    const localPhoto = localStorage.getItem('profilePic');
+    if(localPhoto) document.getElementById('profile-pic-display').src = localPhoto;
+
     myBooks = JSON.parse(localStorage.getItem('myLibrary')) || [];
     renderLibrary();
-    calculateStats(); // Calc stats on load
+    calculateStats();
 }
 function handleUserLogin(user) {
     currentUser = user; isGuest = false;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('user-display-name').innerText = user.displayName;
+    document.getElementById('profile-name-large').innerText = user.displayName;
+    
+    // Default photo from Google
+    if (user.photoURL) document.getElementById('profile-pic-display').src = user.photoURL;
+    
     loadFromFirebase();
 }
 function logout() {
     (isGuest) ? location.reload() : auth.signOut().then(() => location.reload());
 }
 
-// --- NEW VIEW SWITCHING LOGIC ---
-function switchView(viewName) {
-    // Hide all views
-    document.getElementById('view-search').style.display = 'none';
-    document.getElementById('view-collection').style.display = 'none';
-    document.getElementById('view-stats').style.display = 'none';
-    
-    // Remove active class from all nav buttons
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+// --- PROFILE PHOTO LOGIC (NEW) ---
+function uploadProfilePhoto(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Limit size (approx 500KB)
+        if (file.size > 500000) {
+            alert("Image is too big! Please use a smaller image (max 500KB).");
+            return;
+        }
 
-    // Show selected view and activate button
-    document.getElementById('view-' + viewName).style.display = 'block';
-    document.getElementById('nav-' + viewName).classList.add('active');
-
-    // Recalculate stats if opening stats view
-    if (viewName === 'stats') {
-        calculateStats();
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64String = e.target.result;
+            // Update UI immediately
+            document.getElementById('profile-pic-display').src = base64String;
+            
+            // Save Data
+            if (isGuest) {
+                localStorage.setItem('profilePic', base64String);
+            } else {
+                // Save to Firestore (in a separate 'info' doc to avoid list bloat)
+                db.collection('users').doc(currentUser.uid).collection('info').doc('profile').set({
+                    photo: base64String
+                }, { merge: true });
+            }
+        }
+        reader.readAsDataURL(file);
     }
 }
 
-// --- NEW STATISTICS LOGIC ---
+// --- VIEW SWITCHING ---
+function switchView(viewName) {
+    document.getElementById('view-search').style.display = 'none';
+    document.getElementById('view-collection').style.display = 'none';
+    document.getElementById('view-stats').style.display = 'none';
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+    document.getElementById('view-' + viewName).style.display = 'block';
+    document.getElementById('nav-' + viewName).classList.add('active');
+
+    if (viewName === 'stats') calculateStats();
+}
+
+// --- STATS ---
 function calculateStats() {
-    // 1. Basic Counts
     const total = myBooks.length;
     const owned = myBooks.filter(b => b.owned).length;
     const read = myBooks.filter(b => b.read).length;
 
-    // Animate numbers
     document.getElementById('stat-total').innerText = total;
     document.getElementById('stat-owned').innerText = owned;
     document.getElementById('stat-read').innerText = read;
 
-    // 2. Top Authors Logic
     const authorCounts = {};
     myBooks.forEach(book => {
-        // Only count authors for books marked as Read? Or all books? 
-        // Usually stats are for books read, but let's do all books in collection for now
-        // If you want only read, add: if(book.read) ...
         const author = book.author;
         authorCounts[author] = (authorCounts[author] || 0) + 1;
     });
 
-    // Convert to array and sort
-    const sortedAuthors = Object.entries(authorCounts)
-        .sort((a, b) => b[1] - a[1]) // Sort by count descending
-        .slice(0, 5); // Top 5
-
-    // Render list
+    const sortedAuthors = Object.entries(authorCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const list = document.getElementById('top-authors-list');
     list.innerHTML = '';
     
-    if (sortedAuthors.length === 0) {
-        list.innerHTML = '<li><span>No books yet</span></li>';
-    } else {
+    if (sortedAuthors.length === 0) list.innerHTML = '<li><span>No books yet</span></li>';
+    else {
         sortedAuthors.forEach(([author, count]) => {
             const li = document.createElement('li');
             li.innerHTML = `<span>${author}</span> <span class="count">${count} books</span>`;
@@ -112,11 +134,9 @@ function calculateStats() {
     }
 }
 
-
-// --- BOOK DETAIL FUNCTIONS ---
+// --- BOOK DETAIL ---
 function openBookDetails(id) {
-    const book = myBooks.find(b => b.id === id);
-    if (!book) return;
+    const book = myBooks.find(b => b.id === id); if (!book) return;
     currentDetailId = id; tempRating = book.rating || 0;
     document.getElementById('detail-img').src = book.image;
     document.getElementById('detail-title').innerText = book.title;
@@ -145,31 +165,30 @@ function saveBookDetails() {
     }
 }
 
-// --- DATA MANAGEMENT ---
+// --- DATA ---
 function loadFromFirebase() {
-    const c = document.getElementById('my-library');
-    c.innerHTML = '<p class="loading-msg">Syncing...</p>';
+    // Load Books
     db.collection('users').doc(currentUser.uid).collection('books').get().then((snap) => {
         myBooks = [];
         snap.forEach((doc) => myBooks.push(doc.data()));
-        renderLibrary();
-        calculateStats(); // Update stats after load
-    }).catch(e => c.innerHTML = '<p>Error.</p>');
+        renderLibrary(); calculateStats();
+    });
+
+    // Load Custom Profile Photo (if exists)
+    db.collection('users').doc(currentUser.uid).collection('info').doc('profile').get().then((doc) => {
+        if (doc.exists && doc.data().photo) {
+            document.getElementById('profile-pic-display').src = doc.data().photo;
+        }
+    });
 }
 function saveBookData(newBook) {
-    if (isGuest) {
-        myBooks.unshift(newBook); localStorage.setItem('myLibrary', JSON.stringify(myBooks)); renderLibrary(); calculateStats();
-    } else {
-        db.collection('users').doc(currentUser.uid).collection('books').doc(String(newBook.id)).set(newBook)
-            .then(() => { myBooks.unshift(newBook); renderLibrary(); calculateStats(); })
-            .catch(e => alert("Cloud Error"));
-    }
+    if (isGuest) { myBooks.unshift(newBook); localStorage.setItem('myLibrary', JSON.stringify(myBooks)); renderLibrary(); calculateStats(); }
+    else { db.collection('users').doc(currentUser.uid).collection('books').doc(String(newBook.id)).set(newBook).then(() => { myBooks.unshift(newBook); renderLibrary(); calculateStats(); }); }
 }
 function updateBookStatus(id, type) {
     const idx = myBooks.findIndex(b => b.id === id); if (idx === -1) return;
     myBooks[idx][type] = !myBooks[idx][type];
     if (type === 'read' && myBooks[idx].read) myBooks[idx].reading = false;
-    
     if (isGuest) { localStorage.setItem('myLibrary', JSON.stringify(myBooks)); renderLibrary(); calculateStats(); }
     else { db.collection('users').doc(currentUser.uid).collection('books').doc(String(id)).set(myBooks[idx]).then(() => { renderLibrary(); calculateStats(); }); }
 }
@@ -197,8 +216,7 @@ async function searchBooks() {
             const safeTitle = i.title.replace(/'/g, "\\'");
             const safeAuthor = (i.authors ? i.authors[0] : 'Unknown').replace(/'/g, "\\'");
             const year = i.publishedDate ? i.publishedDate.substring(0, 4) : 'N/A';
-            const el = document.createElement('div');
-            el.className = 'book-card';
+            const el = document.createElement('div'); el.className = 'book-card';
             el.innerHTML = `<img src="${img}" alt="Cover"><h3>${i.title}</h3><p>${i.authors ? i.authors[0] : 'Unknown'}</p><button class="btn-add" onclick="prepareAddBook('${safeTitle}', '${safeAuthor}', '${img}', '${year}')"><i class="fas fa-plus"></i> Add</button>`;
             res.appendChild(el);
         });
@@ -219,7 +237,6 @@ function renderLibrary(filter = 'all') {
     if (filter === 'owned') fBooks = fBooks.filter(b => b.owned);
     if (filter === 'read') fBooks = fBooks.filter(b => b.read);
     if (filter === 'reading') fBooks = fBooks.filter(b => b.reading);
-    
     if (currentSort === 'title') fBooks.sort((a, b) => a.title.localeCompare(b.title));
     else if (currentSort === 'author') fBooks.sort((a, b) => a.author.localeCompare(b.author));
     else fBooks.sort((a, b) => b.id - a.id);
