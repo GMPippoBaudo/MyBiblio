@@ -30,6 +30,17 @@
                 </div>
             </div>
             <hr>
+            <div class="dates-section">
+                <div class="date-group">
+                    <label>Started</label>
+                    <input type="date" id="date-start">
+                </div>
+                <div class="date-group">
+                    <label>Finished</label>
+                    <input type="date" id="date-finish">
+                </div>
+                <p id="reading-duration" class="meta-text"></p>
+            </div>
             <div class="rating-section">
                 <h3>My Rating</h3>
                 <div class="stars" id="star-container">
@@ -81,6 +92,10 @@
                 <i class="fas fa-chart-pie"></i>
                 <span>Stats</span>
             </button>
+            <button class="nav-btn" onclick="switchView('suggestions')" id="nav-suggestions">
+                <i class="fas fa-lightbulb"></i>
+                <span>Ideas</span>
+            </button>
         </nav>
     </header>
 
@@ -97,15 +112,18 @@
         </div>
 
         <div id="view-collection" class="view-section">
-            
             <div class="profile-area">
                 <div class="profile-pic-wrapper" onclick="document.getElementById('profile-upload').click()">
                     <img id="profile-pic-display" src="https://via.placeholder.com/150?text=+" alt="Profile">
                     <div class="edit-icon"><i class="fas fa-camera"></i></div>
                 </div>
                 <input type="file" id="profile-upload" accept="image/*" hidden onchange="uploadProfilePhoto(this)">
-                
                 <h2 id="profile-name-large">Guest User</h2>
+                <div class="dark-mode-toggle" onclick="toggleDarkMode()">
+                    <i class="fas fa-moon"></i>
+                    <span>Dark Mode</span>
+                    <div class="toggle-switch"><div class="toggle-circle"></div></div>
+                </div>
             </div>
 
             <div class="section-header">
@@ -131,7 +149,20 @@
 
         <div id="view-stats" class="view-section" style="display: none;">
             <div class="section-header"><h2>My Statistics</h2></div>
-            
+            <div class="challenge-card">
+                <div class="challenge-header">
+                    <h3><i class="fas fa-trophy"></i> Reading Challenge</h3>
+                    <div class="challenge-goal-input">
+                        <span>Goal:</span>
+                        <input type="number" id="challenge-goal" value="12" min="1" onchange="saveGoal()">
+                    </div>
+                </div>
+                <p class="challenge-text">You have read <strong id="challenge-read-count">0</strong> of <strong id="challenge-target-display">12</strong> books.</p>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="challenge-progress" style="width: 0%"></div>
+                </div>
+            </div>
+
             <div class="stats-container">
                 <div class="stat-card blue">
                     <i class="fas fa-book"></i>
@@ -155,6 +186,21 @@
                 <ul id="top-authors-list"></ul>
             </div>
         </div>
+
+        <div id="view-suggestions" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h2>Suggested for You</h2>
+                <button class="btn-refresh" onclick="generateSuggestions(true)"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            
+            <div id="suggestion-reason" class="suggestion-reason">
+                </div>
+
+            <div id="suggestions-grid" class="results-grid">
+                <p class="loading-msg">Open your library to get suggestions!</p>
+            </div>
+        </div>
+
     </main>
 
     <script src="script.js"></script>
