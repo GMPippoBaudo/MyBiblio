@@ -21,7 +21,6 @@
     <div id="detail-overlay" style="display: none;">
         <div class="detail-box">
             <button class="btn-close-detail" onclick="closeBookDetails()"><i class="fas fa-times"></i></button>
-            
             <div class="detail-header">
                 <img id="detail-img" src="" alt="Cover">
                 <div class="detail-info">
@@ -30,9 +29,7 @@
                     <p id="detail-year" class="meta-text">Year: N/A</p>
                 </div>
             </div>
-
             <hr>
-
             <div class="rating-section">
                 <h3>My Rating</h3>
                 <div class="stars" id="star-container">
@@ -43,12 +40,10 @@
                     <i class="far fa-star" onclick="setRating(5)"></i>
                 </div>
             </div>
-
             <div class="notes-section">
                 <h3>Personal Notes</h3>
                 <textarea id="detail-notes" placeholder="Write your thoughts here..."></textarea>
             </div>
-
             <button class="btn-save-detail" onclick="saveBookDetails()">
                 <i class="fas fa-save"></i> Save Changes
             </button>
@@ -66,28 +61,42 @@
     </div>
 
     <header>
-        <div class="header-content">
+        <div class="header-top-row">
             <div class="user-info">
                 <span id="user-display-name">Guest</span>
                 <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
             </div>
-            <h1>Library</h1>
-            <button class="btn-header-nav" onclick="scrollToLibrary()"><i class="fas fa-arrow-down"></i> My Collection</button>
         </div>
+        
+        <nav class="top-nav">
+            <button class="nav-btn" onclick="switchView('search')" id="nav-search">
+                <i class="fas fa-search"></i>
+                <span>Search</span>
+            </button>
+            <button class="nav-btn active" onclick="switchView('collection')" id="nav-collection">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </button>
+            <button class="nav-btn" onclick="switchView('stats')" id="nav-stats">
+                <i class="fas fa-chart-pie"></i>
+                <span>Stats</span>
+            </button>
+        </nav>
     </header>
 
     <main>
-        <section class="search-section">
+        <div id="view-search" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h2>Add New Books</h2>
+            </div>
             <div class="search-box">
                 <input type="text" id="search-input" placeholder="Search title or author...">
                 <button onclick="searchBooks()"><i class="fas fa-search"></i></button>
             </div>
             <div id="search-results" class="results-grid"></div>
-        </section>
+        </div>
 
-        <hr>
-
-        <section class="library-section" id="my-collection">
+        <div id="view-collection" class="view-section">
             <div class="section-header">
                 <h2>My Collection</h2>
                 <select id="sort-select" onchange="changeSort()">
@@ -107,7 +116,35 @@
             <div id="my-library" class="library-grid">
                 <p class="loading-msg">Loading books...</p>
             </div>
-        </section>
+        </div>
+
+        <div id="view-stats" class="view-section" style="display: none;">
+            <div class="section-header"><h2>My Statistics</h2></div>
+            
+            <div class="stats-container">
+                <div class="stat-card blue">
+                    <i class="fas fa-book"></i>
+                    <h3 id="stat-total">0</h3>
+                    <p>Total Saved</p>
+                </div>
+                <div class="stat-card green">
+                    <i class="fas fa-check-double"></i>
+                    <h3 id="stat-read">0</h3>
+                    <p>Books Read</p>
+                </div>
+                <div class="stat-card orange">
+                    <i class="fas fa-archive"></i>
+                    <h3 id="stat-owned">0</h3>
+                    <p>Books Owned</p>
+                </div>
+            </div>
+
+            <div class="top-authors-section">
+                <h3><i class="fas fa-crown"></i> Top Authors</h3>
+                <ul id="top-authors-list">
+                    </ul>
+            </div>
+        </div>
     </main>
 
     <script src="script.js"></script>
