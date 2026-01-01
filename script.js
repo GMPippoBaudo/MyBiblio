@@ -60,31 +60,58 @@ function logout() {
     (isGuest) ? location.reload() : auth.signOut().then(() => location.reload());
 }
 
-// --- PROFILE PHOTO LOGIC (NEW) ---
+// --- PROFILE PHOTO LOGIC (AUTO-RESIZE) ---
 function uploadProfilePhoto(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        
-        // Limit size (approx 500KB)
-        if (file.size > 500000) {
-            alert("Image is too big! Please use a smaller image (max 500KB).");
-            return;
-        }
-
         const reader = new FileReader();
+
         reader.onload = function(e) {
-            const base64String = e.target.result;
-            // Update UI immediately
-            document.getElementById('profile-pic-display').src = base64String;
-            
-            // Save Data
-            if (isGuest) {
-                localStorage.setItem('profilePic', base64String);
-            } else {
-                // Save to Firestore (in a separate 'info' doc to avoid list bloat)
-                db.collection('users').doc(currentUser.uid).collection('info').doc('profile').set({
-                    photo: base64String
-                }, { merge: true });
+            const img = new Image();
+            img.src = e.target.result;
+
+            img.onload = function() {
+                // Resize logic using Canvas
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Max dimensions (300px is plenty for profile icon)
+                const MAX_WIDTH = 300;
+                const MAX_HEIGHT = 300;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Get compressed base64 (JPEG 70% quality)
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                // Update UI
+                document.getElementById('profile-pic-display').src = compressedBase64;
+                
+                // Save Data
+                if (isGuest) {
+                    localStorage.setItem('profilePic', compressedBase64);
+                } else {
+                    // Save to Firestore
+                    db.collection('users').doc(currentUser.uid).collection('info').doc('profile').set({
+                        photo: compressedBase64
+                    }, { merge: true });
+                }
             }
         }
         reader.readAsDataURL(file);
